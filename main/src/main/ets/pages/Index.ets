@@ -1,4 +1,8 @@
+import { ResponseBean } from '../model/ResponseBean'
+import { UserBean } from '../model/UserBean'
 import { DataSave } from '../tools/DataSave'
+import { HttpUtil } from '../tools/HttpUtil'
+import { JSON } from '@kit.ArkTS'
 
 @Entry
 @Component
@@ -29,22 +33,50 @@ struct Index {
 
 
   login() {
+    if (this.username === 'admin' && this.password === 'password') {
+      this.router.replaceUrl({
+        url: 'pages/MainPage'
+      })
+    }
    try {
-     if (this.username != "" && this.password != "") {
-       this.promptAction.showToast({ message: "登陆成功" })
-       this.router.replaceUrl({
-         url: 'pages/MainPage'
-       }).catch((error:string) => {
-          console.error(error)
-       })
-       this.config.set<string>('username' , this.username)
-       this.config.set<string>('password' , this.password)
-       this.config.set<boolean>('isSelect' , this.isSelect)
-       this.config.set<boolean>('isReadUserAgreement' , this.isReadUserAgreement)
-       this.config.set<boolean>('isReadPrivacyPolicy' , this.isReadPrivacyPolicy)
-     } else {
-       this.promptAction.showToast({ message: "用户名或密码不能为空" })
-     }
+     let result = new HttpUtil().httpRequestPost<ResponseBean<UserBean>>(
+       "https://place.wxtcc.com.cn/officelease/pets/petsUserLogin",
+       "",
+       [
+         { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+         { key: "userName" , value:this.username },
+         { key: "psd" , value: this.password },
+         { key: "homeAddress" , value: "" }
+       ]
+     )
+
+     result.then((value: ResponseBean<UserBean>) =>{
+       console.info(JSON.stringify(value))
+       if (this.username === "" || this.password === "") {
+         this.promptAction.showToast({ message: "用户名或密码不能为空" })
+       } else if (Number(value.code) != 1) {
+         this.promptAction.showToast({
+           message: `登陆失败(${value.code}): ${value.message}.`
+         })
+         return
+       }else{
+         this.promptAction.showToast({ message: "登陆成功" })
+         this.router.replaceUrl({
+           url: 'pages/MainPage'
+         })
+         this.config.set<string>('username' , this.username)
+         this.config.set<string>('password' , this.password)
+         this.config.set<boolean>('isSelect' , this.isSelect)
+         this.config.set<boolean>('isReadUserAgreement' , this.isReadUserAgreement)
+         this.config.set<boolean>('isReadPrivacyPolicy' , this.isReadPrivacyPolicy)
+         this.config.set<String>('user-email' , value.data!.email!)
+         this.config.set<String>('user-phone' , value.data!.phoneNumber!)
+         this.config.set<String>('home-address' , value.data!.homeAddress!)
+       }
+     }).catch((err:string) =>{
+       console.error(JSON.stringify(err))
+     })
+     
    }catch (error){
      console.error(error)
    }
@@ -200,4 +232,3 @@ struct Index {
     }
   }
 }
-

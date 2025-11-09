@@ -53,14 +53,15 @@ export class HttpUtil{
       url += `?${query}`;
     }
 
+    console.info(url)
     let response = await request.request(
       url,
       {
         method:http.RequestMethod.POST,
-        header:{
-          'Content-Type': 'application/json'
-        },
-        extraData: extraDates
+        // header:{
+        //   // 'Content-Type': '*/*'
+        // },
+        // extraData: extraDates
       }
     )
     return JSON.parse(response.result.toString()) as T

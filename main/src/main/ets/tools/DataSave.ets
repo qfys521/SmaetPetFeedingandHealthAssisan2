@@ -30,4 +30,14 @@ export class DataSave{
       return false
     }
   }
+
+  public clearAll():boolean{
+    try{
+      this.dataPreferences?.clear()
+      return true
+    }catch (err){
+      console.error(JSON.stringify(err))
+      return false
+    }
+  }
 }
