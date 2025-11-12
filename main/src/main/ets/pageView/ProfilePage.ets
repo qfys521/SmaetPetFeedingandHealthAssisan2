@@ -5,6 +5,8 @@ import { ResponseBean } from '../model/ResponseBean'
 import { DataListBean } from '../model/DataListBean'
 import { JSON } from '@kit.ArkTS'
 import { prompt } from '@kit.ArkUI'
+import { DataSave } from '../tools/DataSave'
+import { LoginSaveBean } from '../model/LoginSaveBean'
 
 // 定义类型接口
 interface DateRangeOption {
@@ -44,6 +46,8 @@ export struct ProfilePage {
   ]
 
   @State specificDateOptions: SpecificDateOption[] = [] // 具体日期选项
+  config: DataSave = new DataSave(this.getUIContext().getHostContext()!, 'loginData')
+  userKey:string = this.config.get<LoginSaveBean>("loginSave").key??""
 
   dialogController: CustomDialogController = new CustomDialogController({
     builder: EditPetInfoDialog({
@@ -102,16 +106,9 @@ export struct ProfilePage {
                 Text('医疗记录与疫苗信息')
                   .fontSize(16)
                   .fontWeight(FontWeight.Bold)
-                  .margin({ top: 10, left: 10 })
+                  .margin({ top: 10, left: 10 , bottom: 10})
 
-                // 显示当前选中的日期
-                if (this.selectedSpecificDate) {
-                  Text(`📅 选中日期: ${this.selectedSpecificDate}`)
-                    .fontSize(14)
-                    .fontColor('#0066CC')
-                    .fontWeight(FontWeight.Medium)
-                    .margin({ bottom: 10, left: 10 })
-                }
+
 
                 // 列表显示宠物健康记录 - 根据选中的具体日期过滤
                 if (this.getFilteredHealthRecords().length === 0) {
@@ -215,9 +212,11 @@ export struct ProfilePage {
         Text(icon)
           .fontSize(10)
         Text(label)
-          .fontSize(10)
+          .fontSize(18)
           .fontColor('#666666')
           .fontWeight(FontWeight.Medium)
+          .fontSize(18)
+
       }
       .justifyContent(FlexAlign.Start)
       .width('100%')
@@ -230,6 +229,7 @@ export struct ProfilePage {
         .textAlign(TextAlign.Start)
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .fontSize(14)
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)
@@ -337,21 +337,21 @@ export struct ProfilePage {
       this.buildInfoRow('驱虫状态', record.dewormingStatus)
       this.buildInfoRow('上次驱虫日期', record.lastDewormingDate)
 
-      if (record.vetNotes && record.vetNotes !== '') {
-        Column() {
-          Text('兽医备注:')
-            .fontSize(14)
-            .fontColor(this.getTextColor())
-            .fontWeight(FontWeight.Medium)
-            .margin({ bottom: 4 })
-          Text(record.vetNotes)
-            .fontSize(14)
-            .fontColor('#666')
-            .width('100%')
-        }
-        .width('100%')
-        .margin({ top: 8 })
-      }
+      // if (record.vetNotes && record.vetNotes !== '') {
+      //   Column() {
+      //     Text('兽医备注:')
+      //       .fontSize(14)
+      //       .fontColor(this.getTextColor())
+      //       .fontWeight(FontWeight.Medium)
+      //       .margin({ bottom: 4 })
+      //     Text(record.vetNotes)
+      //       .fontSize(14)
+      //       .fontColor('#666')
+      //       .width('100%')
+      //   }
+      //   .width('100%')
+      //   .margin({ top: 8 })
+      // }
     }
     .width('95%')
     .backgroundColor('#99ffffff')
@@ -466,7 +466,7 @@ export struct ProfilePage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<PetBean[]>>(
       "https://place.wxtcc.com.cn/officelease/pets/getPets",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "userId", value: "1" }
       ]
     )
@@ -522,7 +522,7 @@ export struct ProfilePage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<DataListBean<PetHealthHistory>>>(
       "https://place.wxtcc.com.cn/officelease/pets/getPetHealthHistory",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petId", value: "1" },
         { key: "startTime", value: this.getStartTimeByRange() },
         { key: "endTime", value: this.getNowTime() },
@@ -547,7 +547,7 @@ export struct ProfilePage {
       "https://place.wxtcc.com.cn/officelease/pets/updatePets",
       "",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petName", value: petData.petName || "" },
         { key: "petSpecies", value: petData.petSpecies || "" },
         { key: "petBreed", value: petData.petBreed || "" },

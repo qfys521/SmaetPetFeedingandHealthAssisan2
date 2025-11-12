@@ -1,23 +1,26 @@
-import { FeedingSchedulesBean } from "../model/FeedingSchedulesBean"
-import { ResponseBean } from "../model/ResponseBean"
-import { HttpUtil } from "../tools/HttpUtil"
-import { JSON } from "@kit.ArkTS"
-import { DataListBean } from "../model/DataListBean"
-import { PetHealthHistory } from "../model/PetHealthHistoryBean"
+import { FeedingSchedulesBean } from '../model/FeedingSchedulesBean'
+import { ResponseBean } from '../model/ResponseBean'
+import { HttpUtil } from '../tools/HttpUtil'
+import { DataListBean } from '../model/DataListBean'
+import { PetHealthHistory } from '../model/PetHealthHistoryBean'
 import { McBarChart, McPieChart, Options } from '@mcui/mccharts'
-import { prompt, promptAction } from "@kit.ArkUI"
-import { image } from "@kit.ImageKit"
-import { fileIo } from "@kit.CoreFileKit"
-import { photoAccessHelper } from "@kit.MediaLibraryKit"
-import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit';
-import { BusinessError } from '@kit.BasicServicesKit';
-import { systemShare } from "@kit.ShareKit"
+import { prompt, promptAction } from '@kit.ArkUI'
+import { image } from '@kit.ImageKit'
+import { fileIo } from '@kit.CoreFileKit'
+import { photoAccessHelper } from '@kit.MediaLibraryKit'
+import { abilityAccessCtrl, common, Permissions } from '@kit.AbilityKit'
+import { BusinessError } from '@kit.BasicServicesKit'
+import { systemShare } from '@kit.ShareKit'
+import { DataSave } from '../tools/DataSave'
+import { LoginSaveBean } from '../model/LoginSaveBean'
 
 @Component
 export struct FeedAndHealthPage {
   @State currentTab: string = 'feed'
   @State feedSchedule: FeedingSchedulesBean[] = []
   @State healthHistory: PetHealthHistory[] = []
+  config: DataSave = new DataSave(this.getUIContext().getHostContext()!, 'loginData')
+  userKey: string = this.config.get<LoginSaveBean>("loginSave").key ?? ""
   @State lineOption: Options = new Options({
     title: {
       show: true,
@@ -88,13 +91,13 @@ export struct FeedAndHealthPage {
   @State isActive: boolean = true
   @State schedulesInfo: string = '这里是信息'
   @State pixmap: image.PixelMap | undefined = undefined
-  @State isShowButton:boolean = true
+  @State isShowButton: boolean = true
   dialogController: CustomDialogController = new CustomDialogController({
     builder: PostDataDialog({
       cancel: () => {
-        
+
         this.showDialog = false
-        
+
       },
       confirm: (data: PostPetFeedData) => {
         this.postPetFeedSchedule(data)
@@ -106,7 +109,7 @@ export struct FeedAndHealthPage {
     this.getFeedSchedule()
     this.getPetHealth()
 
-    
+
     setTimeout(() => {
       this.updateLineChart()
       this.updatePieChart()
@@ -115,16 +118,16 @@ export struct FeedAndHealthPage {
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      
+
       Image($r("app.media.bg2"))
         .width('100%')
         .height('100%')
         .objectFit(ImageFit.Cover)
         .objectRepeat(ImageRepeat.NoRepeat)
 
-      
+
       Column() {
-        
+
         Column() {
           Row() {
             Text('喂养 & 健康总览')
@@ -145,7 +148,7 @@ export struct FeedAndHealthPage {
           bottom: 12
         })
 
-        
+
         Tabs({ barPosition: BarPosition.Start }) {
           TabContent() {
             if (!this.feedSchedule || this.feedSchedule.length === 0) {
@@ -262,7 +265,7 @@ export struct FeedAndHealthPage {
               .justifyContent(FlexAlign.Center)
               .padding(16)
 
-              Row(){
+              Row() {
                 SaveButton({ text: SaveDescription.DOWNLOAD_AND_SHARE })
                   .onClick(() => {
                     this.isShowButton = false
@@ -273,36 +276,36 @@ export struct FeedAndHealthPage {
                       'ohos.permission.MEDIA_LOCATION'
                     ];
 
-                    
-                    reqPermissionsFromUser(permissions, this.getUIContext().getHostContext() as common.UIAbilityContext);
 
-                    
-                    setTimeout(() =>{
+                    reqPermissionsFromUser(permissions,
+                      this.getUIContext().getHostContext() as common.UIAbilityContext);
+
+
+                    setTimeout(() => {
                       this.getUIContext().getComponentSnapshot().get(
                         "root",
                         async (error: Error, pixmap: image.PixelMap) => {
                           if (error) {
-                            
+
                             return;
                           }
 
-                          
+
                           const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
                           await savePixmapToGallery(context, pixmap);
                         },
                         { waitUntilRenderFinished: true }
                       );
-                    } , 500)
-                    setTimeout(() =>{
+                    }, 500)
+                    setTimeout(() => {
                       this.isShowButton = true
-                    } , 3000)
+                    }, 3000)
                   })
                   .backgroundColor('#00BFA5')
                   .fontColor('#FFF')
                   .borderRadius(20)
               }
               .visibility(this.isShowButton ? Visibility.Visible : Visibility.None);
-
 
             }
             .width('100%')
@@ -358,7 +361,7 @@ export struct FeedAndHealthPage {
     const hour = date.getHours().toString().padStart(2, '0');
     const minute = date.getMinutes().toString().padStart(2, '0');
 
-    
+
     return `${year}-${month}-${day} ${hour}:${minute}`;
   }
 
@@ -437,7 +440,6 @@ export struct FeedAndHealthPage {
     })
   }
 
-  
   getNowTime(): string {
     const now = new Date();
     return this.formatTime(now);
@@ -447,14 +449,14 @@ export struct FeedAndHealthPage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<FeedingSchedulesBean[]>>(
       "https://place.wxtcc.com.cn/officelease/pets/feedingSchedules",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petId", value: "1" }
       ]
     )
 
     result.then((value: ResponseBean<FeedingSchedulesBean[]>) => {
-      
-      
+
+
       this.feedSchedule = value.data!
     })
   }
@@ -463,7 +465,7 @@ export struct FeedAndHealthPage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<DataListBean<PetHealthHistory>>>(
       "https://place.wxtcc.com.cn/officelease/pets/getPetHealthHistory",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petId", value: "1" },
         { key: "startTime", value: this.getTimeByOffset(-1 * 60 * 60 * 24 * 7) },
         { key: "endTime", value: this.getNowTime() },
@@ -484,7 +486,7 @@ export struct FeedAndHealthPage {
       "https://place.wxtcc.com.cn/officelease/pets/addFeedingDevices",
       "",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petId", value: "1" },
         { key: "deviceId", value: "1" },
         { key: "scheduleTime", value: data.scheduleTime },
@@ -498,7 +500,7 @@ export struct FeedAndHealthPage {
       this.getUIContext().getPromptAction().showToast({
         message: "数据成功提交，\n服务器可能会有3~5分钟延迟~"
       })
-      
+
       setTimeout(() => {
         this.aboutToAppear()
       }, 2000)
@@ -534,143 +536,145 @@ struct PostDataDialog {
   controller: CustomDialogController
 
   build() {
-    Column({ space: 20 }) {
-      Text('🐾 喂食计划设置')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .margin({ top: 20 })
+    Scroll() {
+      Column({ space: 20 }) {
+        Text('🐾 喂食计划设置')
+          .fontSize(24)
+          .fontWeight(FontWeight.Bold)
+          .margin({ top: 20 })
 
-      
-      Column() {
-        Text('🕐 喂食时间：').fontSize(16)
-        TextInput({ placeholder: '例如 08:00:00' })
-          .width('90%')
-          .height(40)
-          .backgroundColor('#f2f2f2')
-          .borderRadius(8)
-          .onChange((value) => {
-            this.scheduleTime = value
-          })
-      }
 
-      
-      Column() {
-        Text('🍚 喂食量（g）：').fontSize(16)
-        TextInput({ placeholder: '请输入喂食量（克）' })
-          .width('90%')
-          .height(40)
-          .type(InputType.Number)
-          .backgroundColor('#f2f2f2')
-          .borderRadius(8)
-          .onChange((value) => {
-            this.foodAmount = value
-          })
-      }
+        Column() {
+          Text('🕐 喂食时间：').fontSize(16)
+          TextInput({ placeholder: '例如 08:00:00' })
+            .width('90%')
+            .height(40)
+            .backgroundColor('#f2f2f2')
+            .borderRadius(8)
+            .onChange((value) => {
+              this.scheduleTime = value
+            })
+        }
 
-      
-      Row({ space: 10 }) {
-        Text('✅ 是否启用：').fontSize(16)
-        Toggle({ type: ToggleType.Switch, isOn: this.isActive })
-          .onChange((value) => {
-            this.isActive = value
-          })
-      }
-      .alignItems(VerticalAlign.Center)
 
-      
-      Column() {
-        Text('📝 备注 / 补充信息：').fontSize(16)
-        TextArea({ placeholder: '填写补充说明...' })
-          .width('90%')
-          .height(100)
-          .backgroundColor('#f2f2f2')
-          .borderRadius(8)
-          .onChange((value) => {
-            this.schedulesInfo = value
-          })
-      }
+        Column() {
+          Text('🍚 喂食量（g）：').fontSize(16)
+          TextInput({ placeholder: '请输入喂食量（克）' })
+            .width('90%')
+            .height(40)
+            .type(InputType.Number)
+            .backgroundColor('#f2f2f2')
+            .borderRadius(8)
+            .onChange((value) => {
+              this.foodAmount = value
+            })
+        }
 
-      
-      Row({ space: 20 }) {
-        
-        Button('❌ 取消添加')
-          .width('40%')
-          .height(45)
-          .backgroundColor('#CCCCCC')
-          .fontColor('#000')
-          .borderRadius(10)
-          .onClick(() => {
-            
-            this.controller.close();
-            if (this.cancel) {
-              this.cancel();
-            }
-            this.scheduleTime = ''
-            this.foodAmount = ''
-            this.isActive = true
-            this.schedulesInfo = ''
-            prompt.showToast({ message: '已取消添加' })
-          })
 
-        
-        Button('💾 保存计划')
-          .width('40%')
-          .height(45)
-          .backgroundColor('#007DFF')
-          .fontColor('#fff')
-          .borderRadius(10)
-          .onClick(() => {
-            if (!this.scheduleTime || !this.foodAmount) {
-              prompt.showToast({ message: '请填写喂食时间和喂食量' })
-              return
-            }
-            prompt.showToast({
-              message: `已保存：${this.scheduleTime} / ${this.foodAmount}g / ${this.isActive ? '启用' : '停用'}`
+        Row({ space: 10 }) {
+          Text('✅ 是否启用：').fontSize(16)
+          Toggle({ type: ToggleType.Switch, isOn: this.isActive })
+            .onChange((value) => {
+              this.isActive = value
+            })
+        }
+        .alignItems(VerticalAlign.Center)
+
+
+        Column() {
+          Text('📝 备注 / 补充信息：').fontSize(16)
+          TextArea({ placeholder: '填写补充说明...' })
+            .width('90%')
+            .height(100)
+            .backgroundColor('#f2f2f2')
+            .borderRadius(8)
+            .onChange((value) => {
+              this.schedulesInfo = value
+            })
+        }
+
+
+        Row({ space: 20 }) {
+
+          Button('❌ 取消添加')
+            .width('40%')
+            .height(45)
+            .backgroundColor('#CCCCCC')
+            .fontColor('#000')
+            .borderRadius(10)
+            .onClick(() => {
+
+              this.controller.close();
+              if (this.cancel) {
+                this.cancel();
+              }
+              this.scheduleTime = ''
+              this.foodAmount = ''
+              this.isActive = true
+              this.schedulesInfo = ''
+              prompt.showToast({ message: '已取消添加' })
             })
 
-            this.controller.close();
-            if (this.confirm) {
-              const data = new PostPetFeedData(
-                this.scheduleTime,
-                this.foodAmount,
-                this.isActive,
-                this.schedulesInfo
-              )
-              this.confirm(data);
-            }
-          })
+
+          Button('💾 保存计划')
+            .width('40%')
+            .height(45)
+            .backgroundColor('#007DFF')
+            .fontColor('#fff')
+            .borderRadius(10)
+            .onClick(() => {
+              if (!this.scheduleTime || !this.foodAmount) {
+                prompt.showToast({ message: '请填写喂食时间和喂食量' })
+                return
+              }
+              prompt.showToast({
+                message: `已保存：${this.scheduleTime} / ${this.foodAmount}g / ${this.isActive ? '启用' : '停用'}`
+              })
+
+              this.controller.close();
+              if (this.confirm) {
+                const data = new PostPetFeedData(
+                  this.scheduleTime,
+                  this.foodAmount,
+                  this.isActive,
+                  this.schedulesInfo
+                )
+                this.confirm(data);
+              }
+            })
+        }
+        .justifyContent(FlexAlign.Center)
+        .margin({ top: 30 })
       }
-      .justifyContent(FlexAlign.Center)
-      .margin({ top: 30 })
+      .width('100%')
+      .height('100%')
+      .padding(20)
+      .backgroundColor('#ffffff')
     }
-    .width('100%')
-    .height('100%')
-    .padding(20)
-    .backgroundColor('#ffffff')
   }
 }
 
 function reqPermissionsFromUser(permissions: Array<Permissions>, context: common.UIAbilityContext): void {
   try {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    
+
     atManager.requestPermissionsFromUser(context, permissions).then((data) => {
       let grantStatus: Array<number> = data.authResults;
       let length: number = grantStatus.length;
       for (let i = 0; i < length; i++) {
         if (grantStatus[i] === 0) {
-          
+
         } else {
-          
+
           return;
         }
       }
-      
+
     }).catch((err: BusinessError) => {
-      
+
     })
   } catch (e) {
-    
+
   }
 }
 
@@ -678,38 +682,39 @@ async function savePixmapToGallery(context: common.UIAbilityContext, pixmap: ima
   const helper: photoAccessHelper.PhotoAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
 
   try {
-    
+
     const uri: string = await helper.createAsset(photoAccessHelper.PhotoType.IMAGE, 'jpg');
 
-    
+
     const file: fileIo.File = await fileIo.open(uri, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE);
 
-    
+
     const imagePacker: image.ImagePacker = image.createImagePacker();
     const packOpts: image.PackingOption = { format: 'image/jpeg', quality: 90 };
     const buffer: ArrayBuffer = await imagePacker.packing(pixmap, packOpts);
 
-    
+
     await fileIo.write(file.fd, buffer);
     await fileIo.close(file.fd);
 
     promptAction.showToast({ message: '截图已保存到相册 🎉' });
 
-    
+
     await shareImage(context, uri);
 
   } catch (error) {
     const err = error as BusinessError;
-    
+
     promptAction.showToast({ message: '保存失败，请重试' });
   }
 }
+
 async function shareImage(context: common.UIAbilityContext, fileUriPath: string) {
   try {
-    
+
     const utdType = 'general.image';
 
-    
+
     const sharedData = new systemShare.SharedData({
       utd: utdType,
       uri: fileUriPath,
@@ -717,7 +722,7 @@ async function shareImage(context: common.UIAbilityContext, fileUriPath: string)
       description: '这是从宠物喂养与健康分析页生成的截图'
     });
 
-    
+
     const controller = new systemShare.ShareController(sharedData);
     await controller.show(context, {
       selectionMode: systemShare.SelectionMode.SINGLE,
@@ -725,6 +730,6 @@ async function shareImage(context: common.UIAbilityContext, fileUriPath: string)
     });
 
   } catch (err) {
-    
+
   }
 }

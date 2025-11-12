@@ -5,6 +5,8 @@ import { HttpUtil } from '../tools/HttpUtil'
 import { PetBean } from '../model/PetBean'
 import { FeedingRecordBean } from '../model/FeedingRecordBean'
 import { JSON } from '@kit.ArkTS'
+import { DataSave } from '../tools/DataSave'
+import { LoginSaveBean } from '../model/LoginSaveBean'
 
 
 @Component
@@ -15,6 +17,8 @@ export struct DashboardPage {
   @State isRefreshing: boolean = false
   promptAction = this.getUIContext().getPromptAction()
 
+  config: DataSave = new DataSave(this.getUIContext().getHostContext()!, 'loginData')
+  userKey:string = this.config.get<LoginSaveBean>("loginSave").key??""
   aboutToAppear(): void {
       this.getEnvData()
       this.getUserPet()
@@ -35,7 +39,7 @@ export struct DashboardPage {
         .margin({ top: 20, left: 20, bottom: 20 })
         .alignSelf(ItemAlign.Start)
       Refresh({
-        refreshing: $$this.isRefreshing, // 双向绑定刷新状态
+        refreshing: this.isRefreshing, // 双向绑定刷新状态
         offset: 80 // 触发刷新的下拉距离（单位vp）
       }) {
         Column() {
@@ -234,7 +238,7 @@ export struct DashboardPage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<DataListBean<MonitoringBean>>>(
       "https://place.wxtcc.com.cn/officelease/pets/getMonitoring",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "userId", value: "1" },
         { key: "page", value: "1" },
         { key: "size", value: "15" },
@@ -254,7 +258,7 @@ export struct DashboardPage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<PetBean[]>>(
       "https://place.wxtcc.com.cn/officelease/pets/getPets",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "userId", value: "1" }
       ]
     )
@@ -270,7 +274,7 @@ export struct DashboardPage {
     let result = new HttpUtil().httpRequestGet<ResponseBean<DataListBean<FeedingRecordBean>>>(
       "https://place.wxtcc.com.cn/officelease/pets/getFeedingRecord",
      [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petId", value: "1" },
         { key: "startTime", value: this.getTimeByOffset(-1 * 60 * 60 * 24) },
         { key: "endTime", value: this.getNowTime() },
@@ -279,16 +283,16 @@ export struct DashboardPage {
       ]
     )
     result.then((value: ResponseBean<DataListBean<FeedingRecordBean>>) => {
-      console.info(JSON.stringify(
-        [
-          { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
-          { key: "petId", value: "1" },
-          { key: "startTime", value: this.getTimeByOffset(-1 * 60 * 60 * 24) },
-          { key: "endTime", value: this.getNowTime() },
-          { key: "page", value: "1" },
-          { key: "size", value: "50" }
-        ]
-      ))
+      // console.info(JSON.stringify(
+      //   [
+      //     { key: "key", value: this.userKey },
+      //     { key: "petId", value: "1" },
+      //     { key: "startTime", value: this.getTimeByOffset(-1 * 60 * 60 * 24) },
+      //     { key: "endTime", value: this.getNowTime() },
+      //     { key: "page", value: "1" },
+      //     { key: "size", value: "50" }
+      //   ]
+      // ))
       console.info(`[PetData] ${JSON.stringify(value)}`)
       if (value.data!.list!.length === 0) {
         const d = new FeedingRecordBean()
@@ -305,7 +309,7 @@ export struct DashboardPage {
       "https://place.wxtcc.com.cn/officelease/pets/putFeeding",
       "",
       [
-        { key: "key", value: "803fb55ae18f4ebebe0370cac63492ff" },
+        { key: "key", value: this.userKey },
         { key: "petId", value: "1" },
         { key: "plannedAmount", value: "150" },
         { key: "deviceId", value: "1" }
