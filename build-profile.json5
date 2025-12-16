@@ -1,32 +1,6 @@
 {
   "app": {
     "signingConfigs": [
-      {
-        "name": "default",
-        "type": "HarmonyOS",
-        "material": {
-          "certpath": "C:\\Users\\a2870\\.ohos\\config\\default_SmartPetFeedingandHealthAssistant2_0pA5LivRClN8fZIV3_GTtRiWo7Gogc16Mr1jIvRKDgE=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001B106E49EB7003E1BDE4360F0BEDD9DBD65CA729B2935CB6476E4C20A86DEA3B4B83464565167150",
-          "profile": "C:\\Users\\a2870\\.ohos\\config\\default_SmartPetFeedingandHealthAssistant2_0pA5LivRClN8fZIV3_GTtRiWo7Gogc16Mr1jIvRKDgE=.p7b",
-          "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\a2870\\.ohos\\config\\default_SmartPetFeedingandHealthAssistant2_0pA5LivRClN8fZIV3_GTtRiWo7Gogc16Mr1jIvRKDgE=.p12",
-          "storePassword": "0000001B1DAA10ADC3E3D9162B553149E888E9F086897CB2A9821729E95658DE11E246534B46C382CAEF05"
-        }
-      },
-      {
-        "name": "def",
-        "type": "HarmonyOS",
-        "material": {
-          "certpath": "C:\\Users\\a2870\\.ohos\\config\\def_SmartPetFeedingandHealthAssistant2_0pA5LivRClN8fZIV3_GTtRiWo7Gogc16Mr1jIvRKDgE=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001BFF33D853DC97E61ACF62AF78B5F88EF4F8AC31F7604606177B7FC81B123C34FAEBE3DDCA526181",
-          "profile": "C:\\Users\\a2870\\.ohos\\config\\def_SmartPetFeedingandHealthAssistant2_0pA5LivRClN8fZIV3_GTtRiWo7Gogc16Mr1jIvRKDgE=.p7b",
-          "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\a2870\\.ohos\\config\\def_SmartPetFeedingandHealthAssistant2_0pA5LivRClN8fZIV3_GTtRiWo7Gogc16Mr1jIvRKDgE=.p12",
-          "storePassword": "0000001B7B3B0075CFA4F4321E2BC4EF74F5D8515E88AB7D5CAE5ED33731CB4504376F2E2AAE9DFF78D903"
-        }
-      }
     ],
     "products": [
       {

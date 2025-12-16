@@ -372,10 +372,27 @@ export struct FeedAndHealthPage {
   }
 
   updateLineChart() {
-    const dates =
-      this.healthHistory.map(item => `${item.recordDate?.split("-")[1]}-${item.recordDate?.split("-")[2]}` ?? '')
-    const temperatures = this.healthHistory.map(item => Number(item.bodyTemperature ?? 0))
-    const weights = this.healthHistory.map(item => Number(item.bodyWeight ?? 0))
+    // 方案2：使用空值合并运算符提供兜底值
+    const validData = this.healthHistory ?? [];
+
+    // 日期处理（添加格式校验）
+    const dates = validData.map(item => {
+      const parts = item.recordDate?.split("-") ?? [];
+      return parts.length >= 3 ? `${parts}-${parts}` : '';
+    });
+
+    // 体温数据处理（添加默认值处理）
+    const temperatures = validData.map(item => {
+      const temp = Number(item.bodyTemperature);
+      return isNaN(temp) ? 0 : temp;
+    });
+
+    // 体重数据处理（添加默认值处理）
+    const weights = validData.map(item => {
+      const weight = Number(item.bodyWeight);
+      return isNaN(weight) ? 0 : weight;
+    });
+
 
     /*
     体重 (bodyWeight)
@@ -421,10 +438,12 @@ export struct FeedAndHealthPage {
     疫苗状态 (vaccinationStatus)：Up-to-date / Overdue
     驱虫状态 (dewormingStatus)：Completed / Pending
      */
-    const appetiteLevel = this.healthHistory.map(item => item.appetiteLevel).length ?? 0
-    const energyLevel = this.healthHistory.map(item => item.energyLevel).length ?? 0
-    const vaccinationStatus = this.healthHistory.map(item => item.vaccinationStatus).length ?? 0
-    const dewormingStatus = this.healthHistory.map(item => item.dewormingStatus).length ?? 0
+    const healthData = this.healthHistory ?? [];
+
+    const appetiteLevel = healthData.map(item => item.appetiteLevel).length ?? 0
+    const energyLevel = healthData.map(item => item.energyLevel).length ?? 0
+    const vaccinationStatus = healthData.map(item => item.vaccinationStatus).length ?? 0
+    const dewormingStatus = healthData.map(item => item.dewormingStatus).length ?? 0
 
     this.pieOption.setVal({
       series: [
